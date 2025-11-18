@@ -3,9 +3,6 @@ from random import randint
 import sys
 import os
 
-# 固定flag
-FIXED_FLAG = "sdpcsec{W0w_y0u_kn01w_h0w_t00_nc}"
-
 def congruence_equation_challenge():
     """直接弹出同余方程挑战"""
     # 生成同余方程 c ≡ a + b (mod m)
@@ -26,7 +23,13 @@ def congruence_equation_challenge():
         user_answer = int(sys.stdin.readline().strip())
         if user_answer == correct_c:
             print("🎉 Correct! Congratulations!")
-            print(f"Flag: {FIXED_FLAG}")
+            # 从文件读取动态flag
+            try:
+                with open("/flag", "r") as f:
+                    flag = f.read().strip()
+                print(f"Flag: {flag}")
+            except:
+                print("Error: Flag file not found!")
             return True
         else:
             print(f"❌ Wrong! The correct answer was {correct_c}")
