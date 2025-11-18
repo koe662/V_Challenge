@@ -23,13 +23,24 @@ def congruence_equation_challenge():
         user_answer = int(sys.stdin.readline().strip())
         if user_answer == correct_c:
             print("🎉 Correct! Congratulations!")
-            # 从文件读取动态flag
-            try:
+            
+            # 多种方式获取flag
+            flag = None
+            
+            # 方法1: 从环境变量获取
+            if os.environ.get('GZCTF_FLAG'):
+                flag = os.environ.get('GZCTF_FLAG')
+            elif os.environ.get('FLAG'):
+                flag = os.environ.get('FLAG')
+            # 方法2: 从文件读取
+            elif os.path.exists('/flag'):
                 with open("/flag", "r") as f:
                     flag = f.read().strip()
-                print(f"Flag: {flag}")
-            except:
-                print("Error: Flag file not found!")
+            # 方法3: 备用flag
+            else:
+                flag = "sdpcsec{W0w_y0u_kn01w_h0w_t00_nc_default}"
+            
+            print(f"Flag: {flag}")
             return True
         else:
             print(f"❌ Wrong! The correct answer was {correct_c}")
