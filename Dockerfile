@@ -1,8 +1,8 @@
 ﻿FROM python:3.9-slim
 
-# 使用国内源
-RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+# 使用国内源（修复sed命令）
+RUN echo "deb http://mirrors.ustc.edu.cn/debian/ bullseye main" > /etc/apt/sources.list && \
+    echo "deb http://mirrors.ustc.edu.cn/debian-security bullseye-security main" >> /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y socat
 
