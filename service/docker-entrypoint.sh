@@ -1,9 +1,10 @@
-﻿#!/bin/sh
+#!/bin/sh
 
 # 获取flag优先级
 if [ "$GZCTF_FLAG" ]; then
     INSERT_FLAG="$GZCTF_FLAG"
-    export GZCTF_FLAG=no_FLAG
+    # 不要修改 GZCTF_FLAG，只修改备份变量
+    export GZCTF_FLAG_BACKUP="$GZCTF_FLAG"
 elif [ "$FLAG" ]; then
     INSERT_FLAG="$FLAG"
 else
