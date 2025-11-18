@@ -28,6 +28,4 @@ jobs:
       with:
         context: .
         push: true
-tags: |
-  ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:latest
-  ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:${{ github.sha }}
+        tags: ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:latest
