@@ -3,7 +3,6 @@ name: Build and Push Docker Image
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch:
 
 jobs:
   build-and-push:
@@ -30,6 +29,4 @@ jobs:
         push: true
         tags: |
           ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:latest
-          ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:v2
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+          ${{ secrets.REGISTRY_URL }}/v_challenge/v_challenge:v3
