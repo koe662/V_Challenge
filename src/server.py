@@ -1,7 +1,8 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 from Crypto.Util.number import *
-from random import getrandbits
+from random import getrandbits, randint
 import sympy, os, sys
+import uuid
 
 # 从文件读取 flag
 def get_flag():
@@ -9,21 +10,22 @@ def get_flag():
         with open("/flag","rb") as f:
             return f.read().strip()
     except:
-        return b"GZCTF_FLAG_NOT_SET"
+        # 如果没有flag文件，生成随机UUID作为flag
+        return f"flag{{{str(uuid.uuid4())}}}".encode()
 
 FLAG = get_flag()
 flag1 = FLAG[:len(FLAG)//2]
 flag2 = FLAG[len(FLAG)//2:]
 
 # 彩色 Banner（只展示一次）
-print("""
+print('''
 \033[91m     ____    __    _   ____  __   ___   __ __   ________  ______    ______
 \033[92m    / __ \  / /   / | / / / / /  |__ \ // / /  / ____/  |/  /   |  / ____/
 \033[93m   / / / / / /   /  |/ / / / /   __/ ///_/ /  / / __/ /|_/ / /| | / __/   
 \033[93m  / /_/ / / /___/ /|  / /_/ /   / __/   / /  / /_/ / /  / / ___ |/ /___   
 \033[94m  \___\_\/_____/_/ |_/\____/   /____/  /_/   \____/_/  /_/_/  |_/_____/   
 \033[0m
-""")
+''')
 
 class V_cha:
     def __init__(self):
@@ -47,6 +49,36 @@ class V_cha:
         c2 = pow(m2, self.e2, self.N2)
         return c1, c2
 
+def congruence_equation():
+    """生成同余方程 c ≡ a + b (mod m) - 答错退出，答对给flag"""
+    m = randint(10, 50)  # 模数 10-50
+    a = randint(1, 50)   # a 1-50
+    b = randint(1, 50)   # b 1-50
+    
+    # 计算正确的 c (取模后的结果)
+    correct_c = (a + b) % m
+    
+    print(f"Solve the congruence equation: c ≡ {a} + {b} (mod {m})")
+    print(f"What is the value of c? (0 <= c < {m})")
+    sys.stdout.flush()
+    
+    try:
+        user_answer = int(sys.stdin.readline().strip())
+        if user_answer == correct_c:
+            print("🎉 Correct! Here is your flag:")
+            try:
+                print(FLAG.decode())
+            except:
+                print(str(FLAG))
+            return True
+        else:
+            print(f"❌ Wrong answer! The correct answer was {correct_c}")
+            print("Goodbye!")
+            exit(0)  # 答错直接退出
+    except:
+        print("❌ Invalid input! Goodbye!")
+        exit(0)  # 输入无效直接退出
+
 def keykey():
     x1 = getrandbits(32)
     x2 = getrandbits(32)
@@ -67,10 +99,11 @@ def main():
     A = V_cha()
     coin = 5
     while coin > 0:
-        print("1) verify")
-        print("2) get ciphertext")
+        print("\n1) verify")
+        print("2) get ciphertext") 
         print("3) get N & e")
-        print("4) exit")
+        print("4) congruence equation challenge (get flag)")
+        print("5) exit")
         sys.stdout.flush()
         choose = sys.stdin.readline().strip()
         if choose == "1":
@@ -85,16 +118,17 @@ def main():
             print(f"N1 = {N1}\nN2 = {N2}\ne1 = {e1}\ne2 = {e2}")
             coin -= 1
         elif choose == "4":
+            # 同余方程挑战 - 答错退出，答对给flag
+            congruence_equation()
+            break  # 无论对错都会退出，答对显示flag后退出，答错直接exit
+        elif choose == "5":
             print("bye~")
-            try:
-                print(FLAG.decode())
-            except:
-                print(str(FLAG))
             break
         else:
             print("wrong input")
         sys.stdout.flush()
-    print("Done!")
+    
+    print("Game Over!")
 
 if __name__ == "__main__":
     main()
