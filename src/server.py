@@ -1,69 +1,74 @@
 #!/usr/bin/env python3
-from random import randint
-import sys
 import os
+import sys
+import time
 
-def congruence_equation_challenge():
-    """直接弹出同余方程挑战"""
-    # 生成同余方程 c ≡ a + b (mod m)
-    m = randint(10, 50)  # 模数 10-50
-    a = randint(1, 50)   # a 1-50
-    b = randint(1, 50)   # b 1-50
+# 生成一个简易但绝对非线性的 S-Box (基于素数域的模幂，Z3求解缓慢)
+SBOX = [(pow(x, 253, 257) % 256) for x in range(256)]
+SBOX[0] = 0
+
+def hash_verify(K, P):
+    """
+    全密钥验证函数，防止哈希碰撞导致的伪阳性。
+    K: 9 bytes, P: 2 bytes
+    """
+    state = [P[0], P[1], K[0], K[1]]
+    for i in range(5):
+        state = [SBOX[state[j] ^ K[i+2]] for j in range(4)]
+        state = [state[0]^state[1], state[1]^state[2], state[2]^state[3], state[3]^state[0]]
+    return state
+
+def generate_challenge():
+    K = [int.from_bytes(os.urandom(1), 'big') for _ in range(9)]
+    P = [int.from_bytes(os.urandom(1), 'big') for _ in range(2)]
     
-    # 计算正确的 c (取模后的结果)
-    correct_c = (a + b) % m
+    # ==== 前向约束 (Forward Constraints) ====
+    c1 = SBOX[K[0] ^ K[1]] ^ K[2] ^ K[3]
+    c2 = SBOX[K[1] ^ K[2]] ^ K[3] ^ K[4]
+    c3 = SBOX[K[2] ^ K[3]] ^ K[4] ^ K[5]
+    c4 = SBOX[K[3] ^ K[4]] ^ K[5] ^ K[0]
     
-    print("=== Congruence Equation Challenge ===")
-    print(f"Solve: c ≡ {a} + {b} (mod {m})")
-    print(f"Find c where 0 ≤ c < {m}")
-    print("Enter your answer:")
-    sys.stdout.flush()
+    # ==== 后向约束 (Backward Constraints) ====
+    c6 = SBOX[K[6] ^ K[7]] ^ K[8]
+    c7 = K[7] ^ SBOX[K[8]]
     
-    try:
-        user_answer = int(sys.stdin.readline().strip())
-        if user_answer == correct_c:
-            print("🎉 Correct! Congratulations!")
-            
-            # 多种方式获取flag
-            flag = None
-            
-            # 方法1: 从环境变量获取
-            if os.environ.get('GZCTF_FLAG'):
-                flag = os.environ.get('GZCTF_FLAG')
-            elif os.environ.get('FLAG'):
-                flag = os.environ.get('FLAG')
-            # 方法2: 从文件读取
-            elif os.path.exists('/flag'):
-                with open("/flag", "r") as f:
-                    flag = f.read().strip()
-            # 方法3: 备用flag
-            else:
-                flag = "sdpcsec{W0w_y0u_kn01w_h0w_t00_nc_default}"
-            
-            print(f"Flag: {flag}")
-            return True
-        else:
-            print(f"❌ Wrong! The correct answer was {correct_c}")
-            print("Connection closed.")
-            return False
-    except:
-        print("❌ Invalid input! Please enter a number.")
-        print("Connection closed.")
-        return False
+    target_hash = hash_verify(K, P)
+    return P, K, (c1, c2, c3, c4, c6, c7), target_hash
 
 def main():
-    # 简洁的banner
-    print("Welcome to Math Challenge!")
-    print("Solve the congruence equation to get the flag!")
-    print("=" * 40)
-    sys.stdout.flush()
+    print("Welcome to the Triangulating MitM Challenge!")
+    print("Can you implement the SGE-improved TA to beat the timeout?")
+    print("You have 15 seconds to solve 3 rounds. Z3 won't save you here.\n")
     
-    # 直接开始挑战
-    congruence_equation_challenge()
-    
-    # 无论对错都结束连接
-    print("\nThank you for playing!")
-    sys.stdout.flush()
+    start_time = time.time()
+    for round_num in range(1, 4):
+        P, K, C_vals, target_hash = generate_challenge()
+        c1, c2, c3, c4, c6, c7 = C_vals
+        
+        print(f"--- Round {round_num} ---")
+        print(f"P  = {P}")
+        print(f"C1 to C4 = {c1, c2, c3, c4}")
+        print(f"C6, C7   = {c6, c7}")
+        print(f"Target Hash = {target_hash}")
+        
+        try:
+            ans = input("Submit 9-byte Key (hex format, e.g., 001122...): ").strip()
+            submitted_k = [int(ans[i:i+2], 16) for i in range(0, 18, 2)]
+        except:
+            print("Invalid format!")
+            sys.exit(1)
+            
+        if submitted_k != K:
+            print("Wrong key!")
+            sys.exit(1)
+            
+        if time.time() - start_time > 15:
+            print("Timeout! You are too slow. Try implementing Triangulation MitM.")
+            sys.exit(1)
+            
+        print("Correct!\n")
+        
+    print("Congratulations! Here is your flag: CTF{SGE_M1tM_T4_1s_Aw3s0m3}")
 
 if __name__ == "__main__":
     main()
